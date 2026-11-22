@@ -63,6 +63,7 @@ Stakeholders are individuals or organizations that interact with PayLink, use it
 ## 3.1 User Story Format
 
 All user stories follow this standard format: 
+
 **As a [user/actor], I want [goal], so that [benefit].**
 
 Each story has:
@@ -86,445 +87,591 @@ Each story has:
 
 #### US-01 – Customer Registration
 
-**Related FR:** FR-1  
-**Priority:** Must  
-**User Story:**
-As a customer, I want to register for a PayLink account, so that I can access wallet and bill-payment services.
-**Acceptance Criteria:**
-- **Given** a customer provides the required valid registration information, **When** they submit the registration request, **Then** the system creates a customer account with basic verification.
-- **Given** a customer submits invalid or incomplete required information, **When** registration is attempted, **Then** the system rejects the request and returns an appropriate validation error.
-- **Given** an account already exists for the submitted unique identifier, **When** another registration is attempted, **Then** the system prevents duplicate account creation.
+| Field | Details |
+|---|---|
+| Related FR | FR-1 |
+| Priority | Must |
 
-*Note: The required registration fields and authentication mechanism need confirmation.*
+**User Story**
+
+As a customer, I want to register for a PayLink account, so that I can access wallet and bill-payment services.
+
+**Acceptance Criteria**
+
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a customer provides the required valid registration information | they submit the registration request | the system creates a customer account with basic verification. |
+| 2 | a customer submits invalid or incomplete required information | registration is attempted | the system rejects the request and returns an appropriate validation error. |
+| 3 | an account already exists for the submitted unique identifier | another registration is attempted | the system prevents duplicate account creation. |
+
+**Note:** The required registration fields and authentication mechanism need confirmation.
 
 #### US-02 – Customer Verification Upgrade
 
-**Related FR:** FR-2  
-**Priority:** Should  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-2 |
+| Priority | Should |
+
+**User Story**
+
 As a customer, I want to upgrade my account to verified status, so that I can access higher daily payment limits.
-**Acceptance Criteria:**
-- **Given** a customer has basic verification, **When** an authorized verification process approves the upgrade, **Then** the customer's verification level changes to verified.
-- **Given** a customer has verified status, **When** the system checks the daily payment limit, **Then** it applies the verified limit of 30,000 EGP.
-- **Given** an upgrade request has not been approved, **When** the customer attempts to use verified limits, **Then** the basic limit remains applicable.
+
+**Acceptance Criteria**
+
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a customer has basic verification | an authorized verification process approves the upgrade | the customer's verification level changes to verified. |
+| 2 | a customer has verified status | the system checks the daily payment limit | it applies the verified limit of 30,000 EGP. |
+| 3 | an upgrade request has not been approved | the customer attempts to use verified limits | the basic limit remains applicable. |
 
 #### US-03 – View Wallet Balance and Transaction History
 
-**Related FR:** FR-3  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-3 |
+| Priority | Must |
+
+**User Story**
 
 As a customer, I want to view my available balance, held balance, and transaction history, so that I can monitor my money and previous transactions.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a customer has an active wallet, **When** they request their wallet information, **Then** the system displays available and held balances.
-- **Given** a customer has previous transactions, **When** they request their transaction history, **Then** the system displays their recorded wallet transactions.
-- **Given** a customer has no previous transactions, **When** they request transaction history, **Then** the system returns an empty history without an error.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a customer has an active wallet | they request their wallet information | the system displays available and held balances. |
+| 2 | a customer has previous transactions | they request their transaction history | the system displays their recorded wallet transactions. |
+| 3 | a customer has no previous transactions | they request transaction history | the system returns an empty history without an error. |
 
 #### US-04 – Wallet Top-Up
 
-**Related FR:** FR-4  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-4 |
+| Priority | Must |
+
+**User Story**
+
 As a customer, I want to top up my wallet using a simulated card or agent cash, so that I can add money and pay bills.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a valid simulated card top-up or agent cash top-up is submitted, **When** the operation succeeds, **Then** the wallet balance increases by the credited amount.
-- **Given** a top-up operation fails, **When** the failure is processed, **Then** the wallet balance remains unchanged.
-- **Given** a top-up succeeds, **When** the financial transaction is recorded, **Then** a corresponding ledger entry is created.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a valid simulated card top-up or agent cash top-up is submitted | the operation succeeds | the wallet balance increases by the credited amount. |
+| 2 | a top-up operation fails | the failure is processed | the wallet balance remains unchanged. |
+| 3 | a top-up succeeds | the financial transaction is recorded | a corresponding ledger entry is created. |
 
 #### US-05 – Ledger-Based Balance Management
 
-**Related FR:** FR-5  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-5 |
+| Priority | Must |
+
+**User Story**
+
 As a PayLink financial system, I want every wallet balance change to generate a ledger entry, so that wallet balances can be calculated accurately from recorded financial transactions.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a wallet operation changes available or held funds, **When** the operation is committed, **Then** the system creates the corresponding ledger entry.
-- **Given** a wallet has multiple ledger entries, **When** its balance is calculated, **Then** the balance is derived from the ledger rather than directly overwritten.
-- **Given** an operation is rejected before any money movement, **When** it is completed, **Then** no financial movement is recorded as a successful ledger entry.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a wallet operation changes available or held funds | the operation is committed | the system creates the corresponding ledger entry. |
+| 2 | a wallet has multiple ledger entries | its balance is calculated | the balance is derived from the ledger rather than directly overwritten. |
+| 3 | an operation is rejected before any money movement | it is completed | no financial movement is recorded as a successful ledger entry. |
 
 ### B. Biller Catalog
 
 #### US-06 – Manage Billers and Services
 
-**Related FR:** FR-6  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-6 |
+| Priority | Must |
+
+**User Story**
 
 As an administrator, I want to add, edit, and disable billers and their services, so that PayLink can manage the available payment providers.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** an administrator provides valid biller information, **When** they add a biller, **Then** the biller is stored in the catalog.
-- **Given** an existing biller or service is selected, **When** an administrator edits its information, **Then** the updated information is saved.
-- **Given** an administrator disables a biller or service, **When** a customer requests the available catalog, **Then** the disabled item is not offered as an active payment option.
-- **Given** an unauthorized user attempts to modify the catalog, **When** the request is submitted, **Then** the operation is denied.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | an administrator provides valid biller information | they add a biller | the biller is stored in the catalog. |
+| 2 | an existing biller or service is selected | an administrator edits its information | the updated information is saved. |
+| 3 | an administrator disables a biller or service | a customer requests the available catalog | the disabled item is not offered as an active payment option. |
+| 4 | an unauthorized user attempts to modify the catalog | the request is submitted | the operation is denied. |
 
 #### US-07 – View Billers and Required Input Fields
 
-**Related FR:** FR-7  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-7 |
+| Priority | Must |
+
+**User Story**
 
 As a customer, I want to view available billers and their required input fields, so that I can provide the correct information for a bill inquiry.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** active billers exist, **When** a customer requests the biller catalog, **Then** the system displays the active billers and services.
-- **Given** a customer selects a biller, **When** they view its service details, **Then** the system displays the required input fields.
-- **Given** a biller is disabled, **When** the catalog is requested, **Then** that biller is not presented as an active service.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | active billers exist | a customer requests the biller catalog | the system displays the active billers and services. |
+| 2 | a customer selects a biller | they view its service details | the system displays the required input fields. |
+| 3 | a biller is disabled | the catalog is requested | that biller is not presented as an active service. |
 
 ### C. Payment Processing
 
 #### US-08 – Bill Inquiry
 
-**Related FR:** FR-8  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-8 |
+| Priority | Must |
+
+**User Story**
 
 As a customer, I want to inquire about my bill and see the amount, service fee, and total, so that I know how much money will be deducted before confirming payment.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a customer provides valid biller-specific information, **When** they request a bill inquiry, **Then** the system retrieves the bill amount from the selected biller.
-- **Given** the biller returns a valid amount, **When** the inquiry is processed, **Then** the system calculates and displays the service fee and total payment amount.
-- **Given** the biller returns an inquiry error, **When** the inquiry is processed, **Then** the system informs the customer that the inquiry could not be completed.
-- **Given** a biller does not respond within its expected inquiry period, **When** the inquiry times out, **Then** the system reports the inquiry failure without incorrectly charging the wallet.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a customer provides valid biller-specific information | they request a bill inquiry | the system retrieves the bill amount from the selected biller. |
+| 2 | the biller returns a valid amount | the inquiry is processed | the system calculates and displays the service fee and total payment amount. |
+| 3 | the biller returns an inquiry error | the inquiry is processed | the system informs the customer that the inquiry could not be completed. |
+| 4 | a biller does not respond within its expected inquiry period | the inquiry times out | the system reports the inquiry failure without incorrectly charging the wallet. |
 
 #### US-09 – Pay a Bill Using Wallet Funds
 
-**Related FR:** FR-9  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-9 |
+| Priority | Must |
+
+**User Story**
 
 As a customer, I want to pay a bill using my PayLink wallet, so that I can settle my utility bills without visiting the biller's office.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a customer has sufficient available funds and passes the required payment checks, **When** they confirm a valid bill payment, **Then** the system initiates payment processing.
-- **Given** the biller confirms the payment, **When** the confirmation is received, **Then** the payment becomes Completed and the held amount is finalized.
-- **Given** the customer has insufficient available funds, **When** they attempt payment, **Then** the payment is rejected without making the balance negative.
-- **Given** the payment is not yet confirmed, **When** the customer views its status, **Then** the system displays its current payment state.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a customer has sufficient available funds and passes the required payment checks | they confirm a valid bill payment | the system initiates payment processing. |
+| 2 | the biller confirms the payment | the confirmation is received | the payment becomes Completed and the held amount is finalized. |
+| 3 | the customer has insufficient available funds | they attempt payment | the payment is rejected without making the balance negative. |
+| 4 | the payment is not yet confirmed | the customer views its status | the system displays its current payment state. |
 
 #### US-10 – Idempotent Payment Requests
 
-**Related FR:** FR-10  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-10 |
+| Priority | Must |
+
+**User Story**
 
 As a customer, I want repeated payment requests with the same idempotency key to return the original result, so that network retries do not create duplicate charges.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a payment request has already been processed using an idempotency key, **When** the same request is submitted again with that key, **Then** the system returns the original result without creating another payment.
-- **Given** a payment request uses a new valid idempotency key, **When** it is submitted, **Then** the system processes it as a new request, subject to normal validation.
-- **Given** the same key is reused with conflicting payment details, **When** the request is submitted, **Then** the system must not execute a second financial operation.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a payment request has already been processed using an idempotency key | the same request is submitted again with that key | the system returns the original result without creating another payment. |
+| 2 | a payment request uses a new valid idempotency key | it is submitted | the system processes it as a new request, subject to normal validation. |
+| 3 | the same key is reused with conflicting payment details | the request is submitted | the system must not execute a second financial operation. |
 
-*The exact response for conflicting payloads should be confirmed by the team.*
+**The exact response for conflicting payloads should be confirmed by the team.**
 
 #### US-11 – Enforce Payment Lifecycle
 
-**Related FR:** FR-11  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-11 |
+| Priority | Must |
+
+**User Story**
 
 As a PayLink payment system, I want every payment to follow the defined lifecycle, so that payment statuses remain consistent and unauthorized transitions are prevented.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a newly created payment passes fraud checks and has sufficient funds, **When** validation succeeds, **Then** it transitions from Initiated to FundsHeld.
-- **Given** a payment fails fraud checks or has insufficient funds, **When** validation is completed, **Then** it transitions from Initiated to Rejected.
-- **Given** a payment is FundsHeld, **When** its request is sent to the biller, **Then** it transitions to SentToBiller.
-- **Given** a payment is SentToBiller, **When** the biller confirms it, **Then** it transitions to Completed.
-- **Given** a payment is SentToBiller, **When** the biller refuses it, **Then** it transitions to Failed.
-- **Given** a payment is SentToBiller, **When** no response arrives within the configured timeout, **Then** it transitions to Unknown.
-- **Given** a payment is Unknown, **When** a later confirmation or refusal is received, **Then** it transitions to Completed or Failed respectively.
-- **Given** a requested transition is not defined in the lifecycle, **When** the system attempts it, **Then** the transition is rejected.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a newly created payment passes fraud checks and has sufficient funds | validation succeeds | it transitions from Initiated to FundsHeld. |
+| 2 | a payment fails fraud checks or has insufficient funds | validation is completed | it transitions from Initiated to Rejected. |
+| 3 | a payment is FundsHeld | its request is sent to the biller | it transitions to SentToBiller. |
+| 4 | a payment is SentToBiller | the biller confirms it | it transitions to Completed. |
+| 5 | a payment is SentToBiller | the biller refuses it | it transitions to Failed. |
+| 6 | a payment is SentToBiller | no response arrives within the configured timeout | it transitions to Unknown. |
+| 7 | a payment is Unknown | a later confirmation or refusal is received | it transitions to Completed or Failed respectively. |
+| 8 | a requested transition is not defined in the lifecycle | the system attempts it | the transition is rejected. |
 
 #### US-12 – Hold and Release Wallet Funds
 
-**Related FR:** FR-12  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-12 |
+| Priority | Must |
+
+**User Story**
 
 As a PayLink payment system, I want to hold wallet funds before contacting a biller and release them when a payment fails, so that customers' available balances remain accurate.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a payment passes validation and the customer has sufficient available funds, **When** payment processing begins, **Then** the required amount is moved from available balance to held balance.
-- **Given** a payment is held, **When** the biller confirms it, **Then** the held amount is finalized as a payment charge.
-- **Given** a payment fails and the biller is confirmed not to have received it, **When** the failure is processed, **Then** the held amount is released to the customer's available balance.
-- **Given** a payment is Unknown, **When** the system processes the timeout, **Then** the held amount remains reserved until the biller's outcome is known.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a payment passes validation and the customer has sufficient available funds | payment processing begins | the required amount is moved from available balance to held balance. |
+| 2 | a payment is held | the biller confirms it | the held amount is finalized as a payment charge. |
+| 3 | a payment fails and the biller is confirmed not to have received it | the failure is processed | the held amount is released to the customer's available balance. |
+| 4 | a payment is Unknown | the system processes the timeout | the held amount remains reserved until the biller's outcome is known. |
 
 #### US-13 – Handle Biller Timeouts and Retries
 
-**Related FR:** FR-13  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-13 |
+| Priority | Must |
+
+**User Story**
 
 As a PayLink payment system, I want timed-out payments to become Unknown and be re-queried according to the retry schedule, so that uncertain payment outcomes can be resolved safely.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a live biller does not respond within 10 seconds, **When** the timeout is reached, **Then** the payment becomes Unknown.
-- **Given** a payment becomes Unknown, **When** its retry schedule reaches 1, 5, and 15 minutes, **Then** the system performs up to three re-queries according to that schedule.
-- **Given** a retry or reconciliation confirms payment success, **When** the result is processed, **Then** the payment becomes Completed.
-- **Given** a retry or reconciliation confirms payment refusal or non-receipt, **When** the result is processed, **Then** the payment becomes Failed.
-- **Given** all three retries have been exhausted without a confirmed result, **When** retry processing ends, **Then** the payment waits for reconciliation rather than being automatically refunded.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a live biller does not respond within 10 seconds | the timeout is reached | the payment becomes Unknown. |
+| 2 | a payment becomes Unknown | its retry schedule reaches 1, 5, and 15 minutes | the system performs up to three re-queries according to that schedule. |
+| 3 | a retry or reconciliation confirms payment success | the result is processed | the payment becomes Completed. |
+| 4 | a retry or reconciliation confirms payment refusal or non-receipt | the result is processed | the payment becomes Failed. |
+| 5 | all three retries have been exhausted without a confirmed result | retry processing ends | the payment waits for reconciliation rather than being automatically refunded. |
 
 #### US-14 – Process Asynchronous Biller Callbacks
 
-**Related FR:** FR-14  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-14 |
+| Priority | Must |
+
+**User Story**
 
 As a PayLink payment system, I want to receive asynchronous payment callbacks from TopUpNet and ignore duplicate callbacks, so that delayed payment results are processed exactly once.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** TopUpNet initially accepts a payment, **When** its callback later reports success, **Then** the corresponding payment is updated to Completed.
-- **Given** TopUpNet initially accepts a payment, **When** its callback reports failure, **Then** the corresponding payment is updated to Failed.
-- **Given** a callback has already been successfully processed, **When** the same callback is received again, **Then** the system ignores the duplicate and logs it.
-- **Given** a callback references an unknown payment, **When** it is received, **Then** the system does not modify an unrelated payment.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | TopUpNet initially accepts a payment | its callback later reports success | the corresponding payment is updated to Completed. |
+| 2 | TopUpNet initially accepts a payment | its callback reports failure | the corresponding payment is updated to Failed. |
+| 3 | a callback has already been successfully processed | the same callback is received again | the system ignores the duplicate and logs it. |
+| 4 | a callback references an unknown payment | it is received | the system does not modify an unrelated payment. |
 
 #### US-15 – Support Multiple Biller Integrations
 
-**Related FR:** FR-15  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-15 |
+| Priority | Must |
+
+**User Story**
 
 As a PayLink platform, I want to integrate ElectroCo, AquaCo, and TopUpNet through separate adapters, so that customers can use multiple billers without depending on their individual communication protocols.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** ElectroCo is selected, **When** the system sends an inquiry or payment, **Then** it communicates using REST and JSON.
-- **Given** AquaCo is selected, **When** the system communicates with it, **Then** it uses its SOAP-style XML over HTTP protocol and handles its different response fields and error codes.
-- **Given** TopUpNet is selected, **When** the system submits a mobile top-up, **Then** it handles the asynchronous acceptance response and subsequent callback.
-- **Given** a new biller is introduced, **When** its integration is added, **Then** the existing business modules remain unchanged, with changes limited to the integration module and configuration.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | ElectroCo is selected | the system sends an inquiry or payment | it communicates using REST and JSON. |
+| 2 | AquaCo is selected | the system communicates with it | it uses its SOAP-style XML over HTTP protocol and handles its different response fields and error codes. |
+| 3 | TopUpNet is selected | the system submits a mobile top-up | it handles the asynchronous acceptance response and subsequent callback. |
+| 4 | a new biller is introduced | its integration is added | the existing business modules remain unchanged, with changes limited to the integration module and configuration. |
 
-*NetCo's daily CSV integration is optional.*
+**NetCo's daily CSV integration is optional.**
 
 ### D. Fees and Commissions
 
 #### US-16 – Calculate Service Fees and Promotions
 
-**Related FR:** FR-16  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-16 |
+| Priority | Must |
+
+**User Story**
 
 As a PayLink payment system, I want to calculate service fees according to biller-specific pricing rules and active promotions, so that customers are charged the correct total amount.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** an electricity or water bill is processed, **When** its service fee is calculated, **Then** the fee is 2.50 EGP.
-- **Given** a mobile top-up amount is processed, **When** its fee is calculated, **Then** the fee is 1.5% of the amount, with a minimum of 1 EGP.
-- **Given** an internet payment is up to and including 200 EGP, **When** its fee is calculated, **Then** the fee is 2 EGP.
-- **Given** an internet payment exceeds 200 EGP, **When** its fee is calculated, **Then** the fee is 4 EGP.
-- **Given** an eligible promotion is active for the selected biller, **When** its fee is calculated, **Then** the fee is zero.
-- **Given** a promotion is outside its configured start and end dates, **When** its fee is calculated, **Then** the normal fee rule applies.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | an electricity or water bill is processed | its service fee is calculated | the fee is 2.50 EGP. |
+| 2 | a mobile top-up amount is processed | its fee is calculated | the fee is 1.5% of the amount, with a minimum of 1 EGP. |
+| 3 | an internet payment is up to and including 200 EGP | its fee is calculated | the fee is 2 EGP. |
+| 4 | an internet payment exceeds 200 EGP | its fee is calculated | the fee is 4 EGP. |
+| 5 | an eligible promotion is active for the selected biller | its fee is calculated | the fee is zero. |
+| 6 | a promotion is outside its configured start and end dates | its fee is calculated | the normal fee rule applies. |
 
 #### US-17 – Agent-Assisted Payment and Commission
 
-**Related FR:** FR-17  
-**Priority:** Should  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-17 |
+| Priority | Should |
+
+**User Story**
 
 As an agent, I want to pay a customer's bill through my PayLink terminal, so that I can provide payment services and earn a commission.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** an authorized agent has a valid payment request and the customer has sufficient funds, **When** the payment is completed, **Then** the system records the agent as the payment initiator.
-- **Given** an agent-assisted payment is successfully completed, **When** the commission is calculated, **Then** the agent earns 40% of the service fee.
-- **Given** an agent-assisted payment fails, **When** its result is processed, **Then** no completion-based commission is credited.
-- **Given** the payment is still Unknown, **When** commission processing is evaluated, **Then** no completion-based commission is credited.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | an authorized agent has a valid payment request and the customer has sufficient funds | the payment is completed | the system records the agent as the payment initiator. |
+| 2 | an agent-assisted payment is successfully completed | the commission is calculated | the agent earns 40% of the service fee. |
+| 3 | an agent-assisted payment fails | its result is processed | no completion-based commission is credited. |
+| 4 | the payment is still Unknown | commission processing is evaluated | no completion-based commission is credited. |
 
 ### E. Fraud Checks and Payment Limits
 
 #### US-18 – Enforce Single and Daily Payment Limits
 
-**Related FR:** FR-18  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-18 |
+| Priority | Must |
+
+**User Story**
 
 As a PayLink payment system, I want to validate single-payment and daily payment limits, so that customers cannot exceed the allowed transaction amounts.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a payment amount is below 5 EGP or above 10,000 EGP, **When** payment validation occurs, **Then** the payment is rejected with a clear reason.
-- **Given** a basic customer has already used their daily payment allowance, **When** another payment would exceed 5,000 EGP for the day, **Then** the payment is rejected.
-- **Given** a verified customer has already used their daily payment allowance, **When** another payment would exceed 30,000 EGP for the day, **Then** the payment is rejected.
-- **Given** a payment would exceed a configured limit, **When** it is rejected, **Then** no funds are held or charged.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a payment amount is below 5 EGP or above 10,000 EGP | payment validation occurs | the payment is rejected with a clear reason. |
+| 2 | a basic customer has already used their daily payment allowance | another payment would exceed 5,000 EGP for the day | the payment is rejected. |
+| 3 | a verified customer has already used their daily payment allowance | another payment would exceed 30,000 EGP for the day | the payment is rejected. |
+| 4 | a payment would exceed a configured limit | it is rejected | no funds are held or charged. |
 
-*Whether the service fee is included when calculating these limits requires team confirmation.*
+**Whether the service fee is included when calculating these limits requires team confirmation.**
 
 #### US-19 – Apply Payment Velocity Restrictions
 
-**Related FR:** FR-19  
-**Priority:** Should  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-19 |
+| Priority | Should |
+
+**User Story**
 
 As a PayLink fraud-control system, I want to detect more than five payments within 60 seconds from one account, so that suspicious payment activity can be restricted.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** an account makes five payments within a 60-second period, **When** the system evaluates its activity, **Then** the velocity rule does not block it solely for those five payments.
-- **Given** an account makes more than five payments within 60 seconds, **When** the system evaluates its activity, **Then** the account is blocked for 10 minutes.
-- **Given** an account is blocked by the velocity rule, **When** it attempts another payment during the blocking period, **Then** the payment is rejected with a clear reason.
-- **Given** the 10-minute blocking period has ended, **When** the customer attempts a payment, **Then** the temporary velocity restriction no longer prevents the request.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | an account makes five payments within a 60-second period | the system evaluates its activity | the velocity rule does not block it solely for those five payments. |
+| 2 | an account makes more than five payments within 60 seconds | the system evaluates its activity | the account is blocked for 10 minutes. |
+| 3 | an account is blocked by the velocity rule | it attempts another payment during the blocking period | the payment is rejected with a clear reason. |
+| 4 | the 10-minute blocking period has ended | the customer attempts a payment | the temporary velocity restriction no longer prevents the request. |
 
 ### F. Support Operations
 
 #### US-20 – Search Payment by Reference
 
-**Related FR:** FR-20  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-20 |
+| Priority | Must |
+
+**User Story**
 
 As a support employee, I want to search for a payment using its reference and view its full history, so that I can investigate customer payment problems.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a valid payment reference exists, **When** an authorized support employee searches for it, **Then** the system displays the payment details and recorded history.
-- **Given** a payment has undergone multiple state transitions, **When** its history is requested, **Then** the system displays the recorded transitions in their chronological order.
-- **Given** no payment matches the reference, **When** the search is performed, **Then** the system returns a clear not-found result.
-- **Given** an unauthorized user attempts to access support transaction history, **When** the request is submitted, **Then** access is denied.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a valid payment reference exists | an authorized support employee searches for it | the system displays the payment details and recorded history. |
+| 2 | a payment has undergone multiple state transitions | its history is requested | the system displays the recorded transitions in their chronological order. |
+| 3 | no payment matches the reference | the search is performed | the system returns a clear not-found result. |
+| 4 | an unauthorized user attempts to access support transaction history | the request is submitted | access is denied. |
 
 #### US-21 – Block and Unblock Customer Accounts
 
-**Related FR:** FR-21  
-**Priority:** Should  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-21 |
+| Priority | Should |
+
+**User Story**
 
 As a support employee, I want to block or unblock a customer account, so that I can restrict or restore payment access when necessary.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** an authorized support employee selects an active account, **When** they block it, **Then** the account becomes blocked.
-- **Given** an account is blocked, **When** a payment is attempted, **Then** the system rejects the payment with a clear reason.
-- **Given** an authorized support employee selects a blocked account, **When** they unblock it, **Then** the account becomes eligible for normal payment validation.
-- **Given** an account-blocking action occurs, **When** the action is completed, **Then** it is recorded in the audit log.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | an authorized support employee selects an active account | they block it | the account becomes blocked. |
+| 2 | an account is blocked | a payment is attempted | the system rejects the payment with a clear reason. |
+| 3 | an authorized support employee selects a blocked account | they unblock it | the account becomes eligible for normal payment validation. |
+| 4 | an account-blocking action occurs | the action is completed | it is recorded in the audit log. |
 
 ### G. Notifications
 
 #### US-22 – Notify Customers of Payment Results
 
-**Related FR:** FR-22  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-22 |
+| Priority | Must |
+
+**User Story**
 
 As a customer, I want to receive SMS and push notifications when my payment completes or fails, so that I know the outcome of my transaction.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a payment becomes Completed, **When** its final result is processed, **Then** the system initiates an SMS and push notification.
-- **Given** a payment becomes Failed, **When** its final result is processed, **Then** the system initiates an SMS and push notification containing a clear failure reason.
-- **Given** a payment becomes Unknown, **When** the timeout is processed, **Then** the customer is informed that the payment is still being processed.
-- **Given** a payment notification is initiated, **When** it is sent, **Then** it references the corresponding payment.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a payment becomes Completed | its final result is processed | the system initiates an SMS and push notification. |
+| 2 | a payment becomes Failed | its final result is processed | the system initiates an SMS and push notification containing a clear failure reason. |
+| 3 | a payment becomes Unknown | the timeout is processed | the customer is informed that the payment is still being processed. |
+| 4 | a payment notification is initiated | it is sent | it references the corresponding payment. |
 
 #### US-23 – Retry Failed Notifications
 
-**Related FR:** FR-23  
-**Priority:** Should  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-23 |
+| Priority | Should |
+
+**User Story**
 
 As a PayLink notification system, I want to retry failed SMS or email deliveries up to three times, so that temporary provider failures do not immediately prevent customer communication.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** an SMS or email delivery fails, **When** a retry is scheduled, **Then** the system attempts delivery again.
-- **Given** a notification continues to fail, **When** three retries have been performed, **Then** the notification is marked as undelivered.
-- **Given** a payment has already completed, **When** notification delivery fails, **Then** the payment remains Completed.
-- **Given** a notification is marked undelivered, **When** its status is inspected, **Then** the delivery failure is visible.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | an SMS or email delivery fails | a retry is scheduled | the system attempts delivery again. |
+| 2 | a notification continues to fail | three retries have been performed | the notification is marked as undelivered. |
+| 3 | a payment has already completed | notification delivery fails | the payment remains Completed. |
+| 4 | a notification is marked undelivered | its status is inspected | the delivery failure is visible. |
 
 ### H. System Configuration and Audit
 
 #### US-24 – Update Fees and Limits Without Redeployment
 
-**Related FR:** FR-24  
-**Priority:** Should  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-24 |
+| Priority | Should |
+
+**User Story**
 
 As an administrator, I want to edit fee and limit values without redeploying the application, so that PayLink can update business configurations efficiently.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** an authorized administrator provides a valid new configuration value, **When** they save it, **Then** the updated value is stored.
-- **Given** a fee or limit configuration is updated, **When** a subsequent payment uses that configuration, **Then** the system applies the current configured value.
-- **Given** an unauthorized user attempts to modify configurations, **When** the request is submitted, **Then** the operation is denied.
-- **Given** an administrator changes a configuration, **When** the action is completed, **Then** the change is recorded in the audit log.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | an authorized administrator provides a valid new configuration value | they save it | the updated value is stored. |
+| 2 | a fee or limit configuration is updated | a subsequent payment uses that configuration | the system applies the current configured value. |
+| 3 | an unauthorized user attempts to modify configurations | the request is submitted | the operation is denied. |
+| 4 | an administrator changes a configuration | the action is completed | the change is recorded in the audit log. |
 
 #### US-25 – Record Financial and Administrative Audit Events
 
-**Related FR:** FR-25  
-**Priority:** Must  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-25 |
+| Priority | Must |
+
+**User Story**
 
 As a PayLink company, I want every money movement and administrative action recorded in an audit log, so that financial activities and system changes can be traced and investigated.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a wallet money movement occurs, **When** the operation is committed, **Then** an audit record is created.
-- **Given** an administrator changes a biller, fee, or limit configuration, **When** the change is completed, **Then** an audit record is created.
-- **Given** an audit record is created, **When** it is inspected, **Then** it includes who performed the action, when it occurred, and why.
-- **Given** a money movement is committed, **When** the system records it, **Then** its audit record is not omitted.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a wallet money movement occurs | the operation is committed | an audit record is created. |
+| 2 | an administrator changes a biller, fee, or limit configuration | the change is completed | an audit record is created. |
+| 3 | an audit record is created | it is inspected | it includes who performed the action, when it occurred, and why. |
+| 4 | a money movement is committed | the system records it | its audit record is not omitted. |
 
 ### I. Reconciliation
 
 #### US-26 – Generate Daily Reconciliation Report
 
-**Related FR:** FR-26  
-**Priority:** Should  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-26 |
+| Priority | Should |
+
+**User Story**
 
 As a support employee, I want to generate a daily reconciliation report using a biller's settlement file, so that I can identify differences between PayLink records and actual biller payments.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a valid settlement file is available, **When** reconciliation is performed, **Then** the system compares its payment records with the biller's records.
-- **Given** a settlement file contains a payment that PayLink recorded as Failed, **When** reconciliation is completed, **Then** the difference is flagged in the report for support review.
-- **Given** a discrepancy is detected, **When** the report is generated, **Then** the discrepancy is included with sufficient reference information for investigation.
-- **Given** no discrepancies are detected, **When** reconciliation is completed, **Then** the report reflects the comparison result without inventing differences.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a valid settlement file is available | reconciliation is performed | the system compares its payment records with the biller's records. |
+| 2 | a settlement file contains a payment that PayLink recorded as Failed | reconciliation is completed | the difference is flagged in the report for support review. |
+| 3 | a discrepancy is detected | the report is generated | the discrepancy is included with sufficient reference information for investigation. |
+| 4 | no discrepancies are detected | reconciliation is completed | the report reflects the comparison result without inventing differences. |
 
 ### J. Optional Refund and Reporting Features
 
 #### US-27 – Request Refund for Completed Payment
 
-**Related FR:** FR-27  
-**Priority:** Could  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-27 |
+| Priority | Could |
+
+**User Story**
 
 As a customer, I want to request a refund for a completed payment, so that I can recover money when a valid refund case exists.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** a customer has a completed payment, **When** they submit a refund request, **Then** the system records the request for support review.
-- **Given** a refund request is pending, **When** an authorized support employee approves it, **Then** the system processes the approved refund.
-- **Given** a refund request is rejected, **When** the decision is recorded, **Then** the original completed payment is not refunded.
-- **Given** a refund is successfully processed, **When** the wallet is updated, **Then** the corresponding financial and audit records are created.
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | a customer has a completed payment | they submit a refund request | the system records the request for support review. |
+| 2 | a refund request is pending | an authorized support employee approves it | the system processes the approved refund. |
+| 3 | a refund request is rejected | the decision is recorded | the original completed payment is not refunded. |
+| 4 | a refund is successfully processed | the wallet is updated | the corresponding financial and audit records are created. |
 
-*Refund amount, eligibility, and the final state transition require clarification.*
+**Refund amount, eligibility, and the final state transition require clarification.**
 
 #### US-28 – View Daily Operational Totals
 
-**Related FR:** FR-28  
-**Priority:** Could  
-**User Story:**
+| Field | Details |
+|---|---|
+| Related FR | FR-28 |
+| Priority | Could |
+
+**User Story**
 
 As an administrator, I want to view daily payment totals, fees earned, commissions paid, and failures per biller, so that I can monitor PayLink's daily operations.
 
-**Acceptance Criteria:**
+**Acceptance Criteria**
 
-- **Given** payment records exist for a selected day, **When** an administrator requests daily totals, **Then** the system displays the number of payments.
-- **Given** completed payments contain service fees and agent commissions, **When** the report is generated, **Then** it displays the fees earned and commissions paid.
-- **Given** payments exist for multiple billers, **When** the report is generated, **Then** it displays failure totals per biller.
-- **Given** no transactions exist for the selected day, **When** the report is requested, **Then** the system displays zero totals.
-
----
+| # | Given | When | Then |
+|---:|---|---|---|
+| 1 | payment records exist for a selected day | an administrator requests daily totals | the system displays the number of payments. |
+| 2 | completed payments contain service fees and agent commissions | the report is generated | it displays the fees earned and commissions paid. |
+| 3 | payments exist for multiple billers | the report is generated | it displays failure totals per biller. |
+| 4 | no transactions exist for the selected day | the report is requested | the system displays zero totals. |
 
 # 4. Non-Functional Requirements
 
