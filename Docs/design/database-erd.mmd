@@ -1,0 +1,198 @@
+erDiagram
+    ACCOUNTS ||--|| WALLETS : owns
+    ACCOUNTS ||--o{ PAYMENTS : initiates
+    ACCOUNTS |o--o{ PAYMENTS : agent_processes
+    ACCOUNTS ||--o{ AUDIT_LOGS : performs
+    WALLETS ||--o{ LEDGER_ENTRIES : records
+    WALLETS ||--o{ HOLDS : maintains
+    PAYMENTS ||--o| HOLDS : locks
+    PAYMENTS |o--o{ LEDGER_ENTRIES : generates
+    PAYMENTS ||--o{ PAYMENT_STATUS_HISTORY : tracks
+    PAYMENTS ||--o{ NOTIFICATIONS : triggers
+    BILLERS ||--o{ BILLER_SERVICES : provides
+    BILLER_SERVICES ||--|| FEE_CONFIGURATIONS : configures
+    FEE_CONFIGURATIONS ||--o{ FEE_TIERS : defines
+    BILLER_SERVICES ||--o{ PAYMENTS : billed_under
+    BILLERS ||--o{ BILLER_CALLBACKS : receives
+    BILLERS ||--o{ SETTLEMENT_FILES : submits
+    SETTLEMENT_FILES ||--o{ RECONCILIATION_DISCREPANCIES : flags
+    PAYMENTS |o--o{ RECONCILIATION_DISCREPANCIES : referenced_in
+
+    ACCOUNTS {
+        uuid id PK
+        string national_id "NULL for SYSTEM accounts, UNIQUE for users"
+        string phone_number "NULL for SYSTEM accounts, UNIQUE for users"
+        string email "NULL for SYSTEM accounts, UNIQUE for users"
+        string role "CUSTOMER, AGENT, ADMIN, SUPPORT, SYSTEM"
+        string verification_level "BASIC, VERIFIED"
+        string status "ACTIVE, TEMPORARILY_BLOCKED, PERMANENTLY_BLOCKED"
+        timestamp blocked_until "NULL if active, timestamp when 10-minute block expires"
+        decimal daily_spent_amount
+        timestamp daily_limit_reset_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    WALLETS {
+        uuid id PK
+        uuid account_id FK, UK
+        string currency
+        decimal available_balance "cached: ledger sum minus active holds"
+        decimal held_balance "cached: sum of active holds"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    LEDGER_ENTRIES {
+        uuid id PK
+        uuid wallet_id FK
+        uuid payment_id FK "nullable for direct topups"
+        string transaction_reference UK
+        string direction "DEBIT or CREDIT"
+        decimal amount
+        decimal balance_after
+        string description
+        timestamp created_at
+    }
+
+    HOLDS {
+        uuid id PK
+        uuid wallet_id FK
+        uuid payment_id FK, UK
+        decimal amount
+        string status "HELD, CAPTURED, RELEASED"
+        timestamp expires_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    BILLERS {
+        uuid id PK
+        string code UK
+        string name
+        string protocol "REST, SOAP, ASYNC"
+        boolean is_active
+        timestamp created_at
+    }
+
+    BILLER_SERVICES {
+        uuid id PK
+        uuid biller_id FK
+        string service_code UK
+        string name
+        decimal min_amount
+        decimal max_amount
+        string required_field_name
+        boolean is_active
+    }
+
+    FEE_CONFIGURATIONS {
+        uuid id PK
+        uuid biller_service_id FK, UK
+        string fee_type "FIXED, PERCENTAGE, TIERED"
+        decimal base_amount
+        decimal percentage_rate
+        decimal min_fee
+        timestamp promo_start_date
+        timestamp promo_end_date
+    }
+
+    FEE_TIERS {
+        uuid id PK
+        uuid fee_configuration_id FK
+        decimal up_to_amount "e.g. 200.00 (null for above)"
+        decimal fee_amount "e.g. 2.00 or 4.00"
+    }
+
+    PAYMENTS {
+        uuid id PK
+        string idempotency_key UK
+        uuid customer_id FK
+        uuid agent_id FK "nullable"
+        uuid biller_service_id FK
+        string bill_reference
+        string biller_transaction_id "external reference e.g. ELEC-5544"
+        decimal bill_amount
+        decimal fee_amount
+        decimal agent_commission "40 percent of fee if agent"
+        decimal total_amount
+        string status "INITIATED, FUNDS_HELD, etc."
+        int retry_count
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    PAYMENT_STATUS_HISTORY {
+        uuid id PK
+        uuid payment_id FK
+        string from_status
+        string to_status
+        string trigger_event
+        string reason
+        timestamp created_at
+    }
+
+    BILLER_CALLBACKS {
+        uuid id PK
+        uuid biller_id FK
+        string callback_reference UK "de-duplication key for Hard Case 6"
+        string payload_json
+        string status "PROCESSED, DUPLICATE_IGNORED"
+        timestamp received_at
+    }
+
+    SETTLEMENT_FILES {
+        uuid id PK
+        uuid biller_id FK
+        date settlement_date
+        string file_name
+        int total_records
+        int matched_count
+        int discrepancy_count
+        string status
+        timestamp processed_at
+    }
+
+    RECONCILIATION_DISCREPANCIES {
+        uuid id PK
+        uuid settlement_id FK
+        uuid payment_id FK "nullable if missing in PayLink"
+        string external_reference
+        string discrepancy_type "STATUS_MISMATCH, AMOUNT_MISMATCH, MISSING"
+        decimal expected_amount
+        decimal settled_amount
+        string resolution_status "PENDING_REVIEW, RESOLVED"
+        timestamp created_at
+    }
+
+    NOTIFICATIONS {
+        uuid id PK
+        uuid payment_id FK
+        string recipient_phone
+        string channel "SMS, PUSH, EMAIL"
+        string template_code
+        string message_body
+        string status "PENDING, SENT, FAILED, UNDELIVERED"
+        int retry_count
+        timestamp created_at
+    }
+
+    SYSTEM_CONFIGURATIONS {
+        uuid id PK
+        string config_key UK "e.g. DAILY_LIMIT_BASIC, DAILY_LIMIT_VERIFIED"
+        string config_value
+        string description
+        timestamp updated_at
+    }
+
+    AUDIT_LOGS {
+        uuid id PK
+        uuid actor_id FK
+        string action_type
+        string entity_name
+        string entity_id
+        text old_values_json
+        text new_values_json
+        string ip_address
+        timestamp created_at
+    }

@@ -1,0 +1,84 @@
+graph LR
+    %% Actors / Stakeholders
+    ST01((ST-01: Customer))
+    ST02((ST-02: Agent))
+    ST03((ST-03: Administrator))
+    ST04((ST-04: Support Employee))
+    ST05((ST-05: External Biller))
+    ST06((ST-06: Notification Gateway))
+    ST07((Scheduler / System Cron))
+
+    %% System Boundary
+    subgraph PayLink System
+        %% Accounts & Wallet
+        UC1[FR-01: Register Account]
+        UC2[FR-02: Upgrade KYC Verification]
+        UC3[FR-03: View Balance & Ledger History]
+        UC4[FR-04: Top-Up Wallet Balance]
+        
+        %% Biller Catalog & Inquiries
+        UC5[FR-06: Manage Biller Catalog & Services]
+        UC6[FR-07: Discover Biller Input Fields]
+        UC7[FR-08: Inquire Bill Details & Fees]
+        
+        %% Payment Core & Orchestration
+        UC8[FR-09: Pay Utility Bill]
+        UC9[FR-17: Pay on Behalf of Customer & Earn Commission]
+        UC10[FR-14: Process Biller Webhook / Callback]
+        UC11[FR-13: Retry Unknown Payment]
+        UC12[FR-18/19: Perform Fraud & Velocity Checks]
+        
+        %% Support, Audit & Reconciliation
+        UC13[FR-20: Search Payment & Lifecycle History]
+        UC14[FR-21: Block / Unblock Account]
+        UC15[FR-25: View Financial Audit Trail]
+        UC16[FR-26: Run Nightly Reconciliation & Review Discrepancies]
+        UC17[FR-24: Update Dynamic Fees & Limits Config]
+        UC18[FR-28: View Daily Operations Dashboard]
+        
+        %% Notifications
+        UC19[FR-22/23: Dispatch Multi-Channel Notifications]
+    end
+
+    %% Customer Associations
+    ST01 --> UC1
+    ST01 --> UC2
+    ST01 --> UC3
+    ST01 --> UC4
+    ST01 --> UC6
+    ST01 --> UC7
+    ST01 --> UC8
+
+    %% Agent Associations (FR-4 cash top-up, FR-17 pay on behalf & commission)
+    ST02 --> UC4
+    ST02 --> UC9
+    UC9 -.->|includes| UC8
+    ST02 --> UC3
+
+    %% Payment Internal Relationships (Includes & Triggers)
+    UC8 -.->|includes| UC7
+    UC8 -.->|includes| UC12
+    UC8 -.->|triggers| UC19
+
+    %% Support Associations
+    ST04 --> UC13
+    ST04 --> UC14
+    ST04 --> UC15
+    ST04 --> UC16
+
+    %% Administrator Associations
+    ST03 --> UC5
+    ST03 --> UC17
+    ST03 --> UC18
+
+    %% Automated Scheduler Associations
+    ST07 --> UC11
+    ST07 --> UC16
+
+    %% External Systems Associations
+    UC7 -.->|queries debt| ST05
+    UC8 -.->|dispatches charge| ST05
+    ST05 --> UC10
+    ST05 -.->|provides settlement| UC16
+    UC11 -.->|re-queries status| ST05
+    UC19 --> ST06

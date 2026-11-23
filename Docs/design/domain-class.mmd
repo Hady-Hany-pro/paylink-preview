@@ -1,0 +1,292 @@
+classDiagram
+    %% Core Domain Entities
+    class Account {
+        +UUID id
+        +String national_id
+        +String phone_number
+        +String email
+        +String role
+        +VerificationLevel verification_level
+        +AccountStatus status
+        +DateTime blocked_until
+        +Decimal daily_spent_amount
+        +DateTime daily_limit_reset_at
+        +upgradeVerification()
+        +block(DateTime until)
+        +unblock()
+        +isWithinDailyLimit(Decimal amount, Decimal resolved_limit) Boolean
+    }
+
+    class Wallet {
+        +UUID id
+        +UUID account_id
+        +Decimal available_balance
+        +Decimal held_balance
+        +String currency
+        +createHold(Decimal amount) Hold
+        +releaseHold(UUID hold_id)
+        +captureHold(UUID hold_id)
+        +recalculateFromLedger() Decimal
+    }
+
+    class LedgerEntry {
+        +UUID id
+        +UUID wallet_id
+        +UUID payment_id
+        +String transaction_reference
+        +EntryDirection direction
+        +Decimal amount
+        +Decimal balance_after
+        +String description
+        +DateTime created_at
+    }
+
+    class Hold {
+        +UUID id
+        +UUID wallet_id
+        +UUID payment_id
+        +Decimal amount
+        +HoldStatus status
+        +DateTime expires_at
+        +DateTime created_at
+        +release()
+        +capture()
+    }
+
+    class Payment {
+        +UUID id
+        +String idempotency_key
+        +UUID customer_id
+        +UUID agent_id
+        +UUID biller_service_id
+        +String bill_reference
+        +String biller_transaction_id
+        +Decimal bill_amount
+        +Decimal fee_amount
+        +Decimal agent_commission
+        +Decimal total_amount
+        +PaymentStatus status
+        +Int retry_count
+        +DateTime created_at
+        +transitionTo(PaymentStatus new_status)
+    }
+
+    class Biller {
+        +UUID id
+        +String code
+        +String name
+        +String protocol
+        +Boolean is_active
+    }
+
+    class BillerService {
+        +UUID id
+        +UUID biller_id
+        +String service_code
+        +String name
+        +Decimal min_amount
+        +Decimal max_amount
+        +String required_field_name
+        +Boolean is_active
+    }
+
+    class FeeConfiguration {
+        +UUID id
+        +UUID biller_service_id
+        +FeeType fee_type
+        +Decimal base_amount
+        +Decimal percentage_rate
+        +Decimal min_fee
+        +DateTime promo_start_date
+        +DateTime promo_end_date
+    }
+
+    class FeeTier {
+        +UUID id
+        +UUID fee_configuration_id
+        +Decimal up_to_amount
+        +Decimal fee_amount
+    }
+
+    class SettlementFile {
+        +UUID id
+        +UUID biller_id
+        +Date settlement_date
+        +String file_name
+        +Int total_records
+        +Int matched_count
+        +Int discrepancy_count
+        +String status
+        +DateTime processed_at
+    }
+
+    class ReconciliationDiscrepancy {
+        +UUID id
+        +UUID settlement_id
+        +UUID payment_id
+        +String external_reference
+        +String discrepancy_type
+        +Decimal expected_amount
+        +Decimal settled_amount
+        +String resolution_status
+        +DateTime created_at
+    }
+
+    class Notification {
+        +UUID id
+        +UUID payment_id
+        +String recipient_phone
+        +String channel
+        +String template_code
+        +String message_body
+        +String status
+        +Int retry_count
+        +DateTime created_at
+    }
+
+    class AuditLog {
+        +UUID id
+        +UUID actor_id
+        +String action_type
+        +String entity_name
+        +String entity_id
+        +String old_values_json
+        +String new_values_json
+        +String ip_address
+        +DateTime created_at
+    }
+
+    %% ==========================================
+    %% 5 Design Patterns (Explicit Architecture)
+    %% ==========================================
+
+    %% 1. Pattern: Adapter & Factory (Billers)
+    class BillerAdapter {
+        <<interface>>
+        +inquire(String reference) BillDetails
+        +pay(PaymentRequest request) BillerResponse
+        +checkStatus(String reference) BillerResponse
+    }
+    class BillerFactory {
+        +getAdapter(String biller_code) BillerAdapter
+    }
+
+    %% 2. Pattern: Strategy (Fee Calculations)
+    class FeeStrategy {
+        <<interface>>
+        +calculateFee(Decimal amount, FeeConfiguration config, Boolean is_promotion) Decimal
+    }
+
+    %% 3. Pattern: State (Payment Lifecycle)
+    class PaymentState {
+        <<interface>>
+        +handleHold(Payment payment)
+        +handleSendToBiller(Payment payment)
+        +handleBillerSuccess(Payment payment)
+        +handleBillerFailure(Payment payment)
+        +handleTimeout(Payment payment)
+        +handleRefund(Payment payment)
+    }
+
+    %% 4. Pattern: Chain of Responsibility (Fraud Checks)
+    class FraudCheckHandler {
+        <<abstract>>
+        -FraudCheckHandler next_handler
+        +setNext(FraudCheckHandler handler) FraudCheckHandler
+        +check(Account account, Payment payment) Boolean
+    }
+    class DailyLimitHandler {
+        +check(Account account, Payment payment) Boolean
+    }
+    class VelocityHandler {
+        +check(Account account, Payment payment) Boolean
+    }
+    class BlockedAccountHandler {
+        +check(Account account, Payment payment) Boolean
+    }
+
+    %% 5. Pattern: Observer & Command (Decoupling)
+    class PaymentObserver {
+        <<interface>>
+        +onPaymentStateChanged(Payment payment)
+    }
+    class RetryPaymentCommand {
+        -Payment payment
+        -BillerAdapter adapter
+        +execute() Boolean
+    }
+
+    %% Enums
+    class VerificationLevel {
+        <<enumeration>>
+        BASIC
+        VERIFIED
+    }
+    class AccountStatus {
+        <<enumeration>>
+        ACTIVE
+        TEMPORARILY_BLOCKED
+        PERMANENTLY_BLOCKED
+    }
+    class PaymentStatus {
+        <<enumeration>>
+        INITIATED
+        FUNDS_HELD
+        REJECTED
+        SENT_TO_BILLER
+        COMPLETED
+        FAILED
+        REFUNDED
+        UNKNOWN
+    }
+    class EntryDirection {
+        <<enumeration>>
+        DEBIT
+        CREDIT
+    }
+    class HoldStatus {
+        <<enumeration>>
+        HELD
+        CAPTURED
+        RELEASED
+    }
+    class FeeType {
+        <<enumeration>>
+        FIXED
+        PERCENTAGE
+        TIERED
+    }
+
+    %% Relationships
+    Account "1" --> "1" Wallet : owns
+    Wallet "1" --> "*" LedgerEntry : tracks
+    Wallet "1" --> "*" Hold : reserves
+    Payment "1" --> "0..1" Hold : locks_funds_via
+    Payment "*" --> "1" Account : customer
+    Payment "*" --> "0..1" Account : agent_assisted
+    Payment "*" --> "1" BillerService : pays_for
+    Biller "1" --> "*" BillerService : provides
+    BillerService "1" --> "1" FeeConfiguration : configured_by
+    FeeConfiguration "1" --> "*" FeeTier : defines_tiers
+    Biller "1" --> "*" SettlementFile : provides
+    SettlementFile "1" --> "*" ReconciliationDiscrepancy : records
+    Payment "0..1" --> "*" ReconciliationDiscrepancy : audited_in
+    Payment "1" --> "*" Notification : triggers
+    Account "1" --> "*" AuditLog : logs_actions
+    Payment "1" --> "1" PaymentState : current_state
+
+    %% Pattern Implementations
+    BillerAdapter <|.. ElectroCoAdapter : implements
+    BillerAdapter <|.. AquaCoAdapter : implements
+    BillerAdapter <|.. TopUpNetAdapter : implements
+    BillerFactory ..> BillerAdapter : creates
+
+    FeeStrategy <|.. FixedFeeStrategy : implements
+    FeeStrategy <|.. PercentageFeeStrategy : implements
+    FeeStrategy <|.. TieredFeeStrategy : implements
+
+    FraudCheckHandler <|-- DailyLimitHandler : extends
+    FraudCheckHandler <|-- VelocityHandler : extends
+    FraudCheckHandler <|-- BlockedAccountHandler : extends
+
+    PaymentObserver <|.. NotificationService : implements

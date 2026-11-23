@@ -1,0 +1,91 @@
+sequenceDiagram
+    autonumber
+    actor Customer as ST-01: Customer (Sara)
+    participant API as PayLink Gateway API
+    participant FeeEngine as Fees & Commissions Module
+    participant Fraud as Fraud & Limit Engine
+    participant Wallet as Wallet & Ledger Module
+    participant Engine as Payment Orchestrator
+    participant Adapter as ElectroCo Adapter
+    participant Biller as ST-05: ElectroCo (REST/JSON)
+    participant Notify as ST-06: Notification Gateway
+
+    %% Stage A: Bill Inquiry
+    rect rgb(240, 245, 255)
+    note over Customer, Biller: Stage A: Real-Time Bill Inquiry & Server Fee Calculation
+    Customer->>API: GET /billers/electroco/inquire?meter=1234567890 (FR-08)
+    API->>Adapter: inquire(meter=1234567890)
+    Adapter->>Biller: GET /api/v1/bills/meter/1234567890
+    Biller-->>Adapter: 200 OK (Bill: 350.00 EGP, DueDate: 2026-12-01)
+    Adapter-->>API: BillDetails (350.00 EGP)
+    API->>FeeEngine: calculateFee(amount=350.00, service=ELECTRICITY)
+    FeeEngine-->>API: fee_amount = 2.50 EGP (Fixed Fee Rule)
+    API-->>Customer: Bill Inquiry Summary (Bill: 350.00, Fee: 2.50, Total Due: 352.50 EGP)
+    end
+
+    %% Stage B: Payment Execution
+    rect rgb(245, 255, 245)
+    note over Customer, Notify: Stage B: Payment Execution & Balanced Multi-Party Ledger
+    Customer->>API: POST /payments/pay (Meter=1234567890, Amount=350.00, IdempotencyKey)
+    API->>Engine: Initiate Payment Process (FR-09, FR-10)
+
+    %% Step 1: Idempotency Check (FR-10)
+    Engine->>Engine: Check Idempotency Key in Store (FR-10)
+    alt Idempotency Key Found (Cached Result)
+        Engine-->>API: Return Cached Result (HTTP 200, 0 Duplicate Charges)
+        API-->>Customer: Return Cached Original Receipt
+    else Key Is New
+        Engine->>Engine: Transition Payment -> INITIATED
+        
+        %% Step 2: Fraud, Limit & Velocity Checks (FR-18, FR-19 - Hard Case 4)
+        Engine->>Fraud: Evaluate Limits & Velocity Chain (Account, Total=352.50)
+        alt Daily Limit Exceeded or Velocity Triggered (Hard Case 4)
+            Fraud-->>Engine: Validation Failed (Limit Exceeded or Velocity > 5 req/60s)
+            Engine->>Engine: Transition Payment -> REJECTED
+            Engine-->>API: 422 Unprocessable Entity (Status: REJECTED, Reason: LIMIT_EXCEEDED)
+            API-->>Customer: Payment Rejected (Status: REJECTED, 0 Funds Deducted)
+        else Validation Checks Passed
+            Fraud-->>Engine: Checks Passed (Under dynamic limit, Velocity <= 5 req/60s)
+
+            %% Step 3: Hold Creation (FR-12)
+            Engine->>Wallet: Create Hold (352.50 EGP)
+            Wallet->>Wallet: Verify available_balance >= 352.50
+            Wallet->>Wallet: Insert Hold(amount=352.50, status=HELD) (held_balance increases, available decreases)
+            Wallet-->>Engine: Hold Created (ID: hold-987)
+            Engine->>Engine: Transition Payment -> FUNDS_HELD
+
+            %% Step 4: Dispatch to Biller
+            Engine->>Engine: Transition Payment -> SENT_TO_BILLER
+            Engine->>Adapter: Dispatch Payment Request (Ref, Meter, 350.00 EGP)
+            Adapter->>Biller: POST /api/v1/bills/pay (JSON)
+            Biller-->>Adapter: 200 OK (Status: PAID, BillerTxID: ELEC-5544)
+            Adapter-->>Engine: Payment Confirmed (PAID, BillerTxID: ELEC-5544)
+
+            %% Step 5: Atomic Completion & Balanced Double-Entry Ledger (FR-5, FR-17)
+            note over Engine, Wallet: Atomic DB Transaction: Payment COMPLETED + Balanced Multi-Party Ledger
+            activate Wallet
+            Engine->>Engine: Transition Payment -> COMPLETED
+            Engine->>Wallet: Finalize Transaction (hold-987, biller_tx_id=ELEC-5544)
+            Wallet->>Wallet: Update Hold(hold-987, status=CAPTURED)
+            Wallet->>Wallet: LedgerEntry: DEBIT 352.50 EGP (Customer Wallet)
+            Wallet->>Wallet: LedgerEntry: CREDIT 350.00 EGP (Biller Settlement Payable Account)
+            alt Direct Customer Payment (No Agent)
+                Wallet->>Wallet: LedgerEntry: CREDIT 2.50 EGP (PayLink Fee Income Account)
+                note over Wallet: Balanced: Debits (352.50) == Credits (350.00 Biller + 2.50 Fee Income)
+            else Agent-Assisted Payment (FR-17)
+                Wallet->>Wallet: LedgerEntry: CREDIT 1.50 EGP (PayLink Fee Income Account)
+                Wallet->>Wallet: LedgerEntry: CREDIT 1.00 EGP (Agent Wallet Commission)
+                note over Wallet: Balanced: Debits (352.50) == Credits (350.00 Biller + 1.50 Fee + 1.00 Commission)
+            end
+            Wallet-->>Engine: Atomic Ledger Entries Committed
+            deactivate Wallet
+
+            %% Step 6: Async Notifications & Response
+            Engine->>Notify: Emit PaymentCompleted Event (FR-22)
+            Notify--)Customer: Dispatch SMS & Push Notification (Bill 350 EGP Paid Successfully)
+
+            Engine-->>API: Payment Result (Status: COMPLETED, Receipt, BillerTxID: ELEC-5544)
+            API-->>Customer: 200 OK (Status: COMPLETED, Balance Updated)
+        end
+    end
+    end

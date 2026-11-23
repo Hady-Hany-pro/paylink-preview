@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    actor Customer as ST-01: Customer
+    participant API as PayLink Gateway API
+    participant Fraud as Fraud & Limit Engine
+    participant Wallet as Wallet & Ledger Module
+    participant Engine as Payment Orchestrator
+    participant Adapter as AquaCo Adapter
+    participant Biller as ST-05: AquaCo (SOAP/XML)
+    participant Notify as ST-06: Notification Gateway
+
+    Customer->>API: POST /payments/pay (AquaCo, Meter 1234567890, Amount 350.00, IdempotencyKey)
+    API->>Engine: Process Payment Request (FR-09)
+    Engine->>Engine: Transition Payment to INITIATED
+
+    %% Limits & Velocity Checks
+    Engine->>Fraud: Evaluate Limits & Velocity (FR-18, FR-19)
+    Fraud-->>Engine: Checks Passed
+
+    %% Pre-Hold Creation
+    note over Wallet: Balance Rule: available = ledger total - active holds
+    Engine->>Wallet: Create Hold (352.50 EGP) (FR-12)
+    Wallet->>Wallet: Insert Hold(amount=352.50, status=HELD)
+    Wallet-->>Engine: Hold Created (ID: hold-456, Status: HELD)
+    Engine->>Engine: Transition Payment to FUNDS_HELD
+
+    %% Dispatch to External Biller (SOAP Fault)
+    Engine->>Engine: Transition Payment to SENT_TO_BILLER
+    Engine->>Adapter: Dispatch Payment Request (SOAP XML)
+    Adapter->>Biller: POST /soap/water/v1 (SOAP Envelope)
+    Biller-->>Adapter: 400 Bad Request (SOAP Fault: AMOUNT_EXCEEDS_BILL)
+    Adapter-->>Engine: Biller Rejection (Code: AMOUNT_EXCEEDS_BILL)
+
+    %% Strict Section 2.5 Lifecycle: FAILED -> REFUNDED
+    Engine->>Engine: Transition Payment to FAILED (Reason: Biller Refused)
+    Engine->>Wallet: Release Hold (hold-456, Reason: Payment Failed)
+    activate Wallet
+    Wallet->>Wallet: Update Hold(hold-456, status=RELEASED)
+    note over Wallet: Zero Phantom Credits: No ledger debit captured, releasing hold restores available balance
+    Wallet-->>Engine: Hold Released (Balance Restored)
+    deactivate Wallet
+    Engine->>Engine: Transition Payment to REFUNDED
+
+    %% Async Notification & Final Response
+    Engine->>Notify: Dispatch PaymentFailed Event (FR-22)
+    Notify--)Customer: Deliver SMS (Water bill failed: Amount exceeds bill. Reserved funds released.)
+
+    Engine-->>API: Payment Result (Status: REFUNDED, Error: AMOUNT_EXCEEDS_BILL)
+    API-->>Customer: 422 Unprocessable Entity (Status: REFUNDED, Reason: AMOUNT_EXCEEDS_BILL, Funds Available)

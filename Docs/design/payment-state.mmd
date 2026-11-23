@@ -1,0 +1,30 @@
+stateDiagram-v2
+    [*] --> Initiated : Customer submits payment request (FR-09)
+
+    Initiated --> FundsHeld : Fraud checks pass & Wallet has sufficient funds (FR-11, FR-12)
+    Initiated --> Rejected : Fraud check fails OR Insufficient funds (FR-18)
+
+    FundsHeld --> SentToBiller : Request dispatched to biller adapter
+
+    SentToBiller --> Completed : Biller confirms (PAID) (FR-09)
+    SentToBiller --> Failed : Biller refuses (Error code / Rejection) (FR-12)
+    SentToBiller --> Unknown : No response within 10s timeout (FR-13)
+
+    Unknown --> Completed : Biller confirms later (Async callback / Retry query / Settlement file)
+    Unknown --> Failed : Biller later refuses OR Nightly reconciliation confirms no payment (FR-26)
+
+    Failed --> Refunded : Held funds released back to customer wallet (FR-12)
+
+    Rejected --> [*]
+    Completed --> [*]
+    Refunded --> [*]
+
+    note right of Unknown
+        A payment in UNKNOWN is NEVER refunded automatically!
+        Money stays held until conclusive verification (FR-13).
+    end note
+
+    note right of Completed
+        Hold is captured into permanent debit.
+        Agent commission is credited if applicable (FR-17).
+    end note
