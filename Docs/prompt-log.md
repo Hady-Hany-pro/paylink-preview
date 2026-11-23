@@ -13,7 +13,11 @@ This log documents interactions with AI tools throughout Phase 1 (Requirements, 
 | **2026-11-22** | Hady | Design | Google Gemini (Gemini 2.0) | DES-P04 | Generated a Mermaid sequence diagram for paying an electricity bill with ElectroCo (REST/JSON) with fee calculation, hold, and double-entry ledger. | **Fixed** – AI had client send the fee, missed the bill inquiry step, omitted Hard Case 4 rejection, and created an unbalanced ledger when no agent was present. Fixed by dividing into Stage A (Inquiry & server fee calculation) and Stage B (Execution), adding Hard Case 4 rejection branch (`REJECTED`), and implementing an alt/else double-entry ledger that balances to 352.50 EGP for both direct and agent-assisted payments. |
 | **2026-11-22** | Hady | Design | Claude 3.5 Sonnet | DES-P05 | Generated a database ERD in Mermaid covering all 8 Hard Cases with at least 10 tables. | **Fixed** – AI omitted webhook deduplication, lacked line-by-line reconciliation, used mandatory constraints for system accounts, had incorrect mandatory agent cardinality, and lacked temporary block duration. Fixed by adding `BILLER_CALLBACKS` (Hard Case 6), `RECONCILIATION_DISCREPANCIES` (Hard Case 7), `SYSTEM_CONFIGURATIONS` (FR-24), `FEE_TIERS` (tiered pricing), renaming to `SETTLEMENT_FILES`, adding `blocked_until`, making system credentials nullable, and correcting nullable relationships to `|o--o{`. |
 | **2026-11-23** | Hady | Design | Google Gemini (Antigravity) | DES-P06 | Generated a Mermaid state diagram (stateDiagram-v2) for the complete bill payment lifecycle enforcing Section 2.5 finite state machine transitions. | **Fixed** – AI initially allowed automatic refunds from the Unknown state upon timeout. Fixed by enforcing strict Section 2.5 rules: Unknown requires retry queries or settlement reconciliation, and automatic refunds from Unknown are strictly prohibited (funds remain safely held). |
-
+| 2026-11-23 | Mohamed Salah | DevOps Planning | ChatGPT – GPT-6 | DEV-P01 | Analyzed the Phase 1 assignment requirements and generated a prioritized implementation plan for the DevOps responsibilities, including Docker, SQL Server, testing, CI/CD, and repository workflow. | Accepted – Provided a clear implementation sequence based on the assignment brief and separated Phase 1 deliverables from Phase 2 implementation tasks. |
+| 2026-11-23 | Mohamed Salah | DevOps | ChatGPT – GPT-6 | DEV-P02 | Generated a minimal FastAPI application with a health-check endpoint, project dependencies, and an automated test using Pytest and TestClient. | Accepted – Provided a working application foundation. Ruff identified an import-formatting issue in the test file, which was corrected before proceeding. |
+| 2026-11-23 | Mohamed Salah | DevOps | ChatGPT – GPT-6 | DEV-P03 | Designed the Docker environment for FastAPI and Microsoft SQL Server 2025 using Dockerfile and Docker Compose, including persistent storage, health checks, and non-root execution. | Accepted – The Docker image built successfully, SQL Server became healthy, and the FastAPI container started successfully. |
+| 2026-11-23 | Mohamed Salah | DevOps / Security | ChatGPT – GPT-6 | DEV-P04 | Reviewed Dockerfile security warnings and Docker Scout vulnerability findings, then evaluated base-image updates, package upgrades, and non-root execution. | Fixed – The initial recommendation suggested that updating the base image and system packages would address the vulnerability findings. Docker Scout still reported 14 high vulnerabilities in the selected base image. The assessment was corrected to distinguish fixable vulnerabilities from those without an available fix and to require scanning the final application image before claiming remediation. |
+| 2026-11-23 | Mohamed Salah | DevOps / CI-CD | ChatGPT – GPT-6 | DEV-P05 | Generated a GitHub Actions CI workflow to install Python dependencies, run Ruff linting, execute Pytest, and build the Docker image on repository updates. | Accepted – The workflow was created with separate quality-checking steps. Local linting, testing, and Docker build checks passed. The remote GitHub Actions result remained pending at the time of logging. |
 ---
 
 ## Detailed Prompts
@@ -323,3 +327,157 @@ Use Section 2.5 (Payment life cycle), Section 2.6 (Business rules), and Hard Cas
 • Generate valid Mermaid code using `stateDiagram-v2`.
 • Clean transition descriptions and readable layout.
 • Ensure full consistency with all other 5 Phase 1 design models.
+---
+
+### DEV-P01 – Phase 1 DevOps Planning
+
+Act as an experienced DevOps Engineer and Software Engineering Project Advisor. Carefully analyze the PayLink Year Work Project assignment brief and identify the exact responsibilities and deliverables required for Phase 1.
+
+**Context:**
+
+The project uses Python and FastAPI. The team has already created a private GitHub repository and divided responsibilities between Requirements, Design, and DevOps.
+
+**Required tasks:**
+
+1. Identify all DevOps-related Phase 1 requirements from the assignment brief.
+2. Separate mandatory Phase 1 tasks from Phase 2 implementation tasks.
+3. Identify the required Docker, Docker Compose, GitHub Actions, and repository configuration.
+4. Define the minimum application and testing skeleton required for Phase 1.
+5. Provide a practical implementation sequence.
+6. Explain how to verify each deliverable before submission.
+
+**Output requirements:**
+
+- Follow the assignment brief as the primary source of truth.
+- Do not introduce unnecessary Phase 2 implementation.
+- Provide actionable steps and commands.
+- Clearly distinguish completed, pending, and unverified requirements.
+
+---
+
+### DEV-P02 – FastAPI Foundation and Automated Testing
+
+Act as a Senior Python Backend Engineer. Help me create the minimum working application foundation for the PayLink project using Python and FastAPI.
+
+**Required implementation:**
+
+1. Create a FastAPI application inside `app/main.py`.
+2. Configure the application title, description, and version.
+3. Implement a health-check endpoint using `GET /health`.
+4. Return a JSON response indicating that the application is healthy.
+5. Create an automated test using Pytest and FastAPI TestClient.
+6. Store the test inside `Test/test_main.py`.
+7. Prepare a `requirements.txt` containing the necessary dependencies.
+
+**Constraints:**
+
+- Keep the application minimal because this is Phase 1.
+- Do not implement wallet, payments, biller integrations, or business logic.
+- Ensure that the application can run locally and inside Docker.
+- Ensure the test verifies both the HTTP status code and response body.
+
+**Expected result:**
+
+A working FastAPI skeleton with at least one passing automated test.
+
+---
+
+### DEV-P03 – Docker and Microsoft SQL Server Setup
+
+Act as a Senior DevOps Engineer. Design a Docker-based development environment for the PayLink backend using Python, FastAPI, and Microsoft SQL Server 2025 Developer Edition.
+
+**Required components:**
+
+1. A Dockerfile for the FastAPI application.
+2. A Docker Compose configuration containing:
+   - FastAPI application service.
+   - Microsoft SQL Server 2025 Developer service.
+3. A persistent Docker volume for SQL Server data.
+4. A SQL Server health check.
+5. Application startup dependency on database health.
+6. Environment-variable configuration for database credentials.
+7. A `.env.example` file without real credentials.
+
+**Security requirements:**
+
+- The FastAPI container must run using a non-root user.
+- Do not hardcode database passwords in Dockerfile or Compose.
+- Do not expose secrets through Git commits.
+- Optimize Dockerfile layers and dependency installation.
+
+**Verification requirements:**
+
+- Docker Compose configuration must validate successfully.
+- Both containers must start successfully.
+- SQL Server must reach a healthy state.
+- FastAPI must respond successfully to its health-check endpoint.
+
+Do not claim that the application has an active database connection unless that connection is actually implemented and tested.
+
+---
+
+### DEV-P04 – Dockerfile Security and Vulnerability Analysis
+
+Act as a Container Security Engineer. Review my Dockerfile and Docker vulnerability scan results.
+
+**Context:**
+
+The application uses Python 3.14 with a Debian Slim base image. SonarLint reported a root-user security warning and Dockerfile optimization issues. Docker Scout also reported high-severity vulnerabilities in the base image.
+
+**Required tasks:**
+
+1. Identify the security implications of running the application as root.
+2. Modify the Dockerfile to create and use a dedicated non-root application user.
+3. Improve Dockerfile layer organization by combining consecutive RUN instructions where appropriate.
+4. Recommend safe base-image updates.
+5. Explain the difference between operating-system vulnerabilities and Python package vulnerabilities.
+6. Analyze Docker Scout findings and identify which vulnerabilities have available fixed versions.
+7. Distinguish between vulnerabilities that can be fixed and vulnerabilities without an available fix.
+
+**Important constraints:**
+
+- Do not suppress security warnings.
+- Do not claim that vulnerabilities are resolved without a new scan.
+- Do not blindly upgrade dependencies without considering compatibility.
+- Verify the final built application image rather than relying only on the base-image scan.
+
+**Expected result:**
+
+A more secure Dockerfile, documented vulnerability findings, and a clear verification process.
+
+---
+
+### DEV-P05 – GitHub Actions CI Pipeline
+
+Act as a Senior DevOps Engineer. Create a GitHub Actions Continuous Integration workflow for the PayLink backend project.
+
+**Project configuration:**
+
+- Backend: Python 3.14.
+- Framework: FastAPI.
+- Testing: Pytest.
+- Linting: Ruff.
+- Containerization: Docker.
+
+**Required workflow:**
+
+1. Trigger the workflow on pushes to repository branches.
+2. Trigger the workflow on Pull Requests targeting `main`.
+3. Support manual execution.
+4. Checkout the repository.
+5. Set up the required Python version.
+6. Install dependencies from `requirements.txt`.
+7. Run Ruff checks against the application and tests.
+8. Execute automated tests using Pytest.
+9. Build the Docker image.
+
+**Security requirements:**
+
+- Use official, maintained GitHub Actions.
+- Apply the minimum required workflow permissions.
+- Do not expose environment secrets in logs.
+- Keep the workflow readable and maintainable.
+
+**Expected result:**
+
+A CI pipeline that automatically checks code quality, executes tests, and verifies that the Docker image can be built before changes are merged into the main branch.
