@@ -12,7 +12,7 @@ This log documents interactions with AI tools throughout Phase 1 (Requirements, 
 | **2026-11-21** | Hady | Design | Claude 3.5 Sonnet | DES-P03 | Generated a Mermaid sequence diagram for refunding a rejected water bill payment with AquaCo (SOAP/XML). | **Fixed** – AI output had syntax errors (semicolons in notes), skipped the intermediate `FUNDS_HELD` state, and added an invalid CREDIT ledger entry on hold release. Fixed by eliminating syntax errors, enforcing strict Section 2.5 lifecycle (`Initiated` &rarr; `FundsHeld` &rarr; `SentToBiller` &rarr; `Failed` &rarr; `Refunded`), and restoring balance via hold status `RELEASED` with zero phantom credits. |
 | **2026-11-22** | Hady | Design | Google Gemini (Gemini 2.0) | DES-P04 | Generated a Mermaid sequence diagram for paying an electricity bill with ElectroCo (REST/JSON) with fee calculation, hold, and double-entry ledger. | **Fixed** – AI had client send the fee, missed the bill inquiry step, omitted Hard Case 4 rejection, and created an unbalanced ledger when no agent was present. Fixed by dividing into Stage A (Inquiry & server fee calculation) and Stage B (Execution), adding Hard Case 4 rejection branch (`REJECTED`), and implementing an alt/else double-entry ledger that balances to 352.50 EGP for both direct and agent-assisted payments. |
 | **2026-11-22** | Hady | Design | Claude 3.5 Sonnet | DES-P05 | Generated a database ERD in Mermaid covering all 8 Hard Cases with at least 10 tables. | **Fixed** – AI omitted webhook deduplication, lacked line-by-line reconciliation, used mandatory constraints for system accounts, had incorrect mandatory agent cardinality, and lacked temporary block duration. Fixed by adding `BILLER_CALLBACKS` (Hard Case 6), `RECONCILIATION_DISCREPANCIES` (Hard Case 7), `SYSTEM_CONFIGURATIONS` (FR-24), `FEE_TIERS` (tiered pricing), renaming to `SETTLEMENT_FILES`, adding `blocked_until`, making system credentials nullable, and correcting nullable relationships to `|o--o{`. |
-| **2026-11-23** | Hady | Design | Google Gemini (Antigravity) | DES-P06 | Created an interactive HTML viewer using Mermaid.js CDN that displays all 6 PayLink design models with tabbed navigation and responsive zooming. | **Accepted** – Provided a standalone single-page HTML application embedding all 6 Mermaid models with tabs, clean styling, and full rendering support. |
+| **2026-11-23** | Hady | Design | Google Gemini (Antigravity) | DES-P06 | Generated a Mermaid state diagram (stateDiagram-v2) for the complete bill payment lifecycle enforcing Section 2.5 finite state machine transitions. | **Fixed** – AI initially allowed automatic refunds from the Unknown state upon timeout. Fixed by enforcing strict Section 2.5 rules: Unknown requires retry queries or settlement reconciliation, and automatic refunds from Unknown are strictly prohibited (funds remain safely held). |
 
 ---
 
@@ -279,32 +279,47 @@ The schema must cover all mandatory functional modules, satisfy 3NF principles w
 
 ---
 
-### DES-P06 – Interactive Design Viewer & Multi-Model Visualizer
-Act as a Senior Frontend Architect and Documentation Tooling Specialist. Build a lightweight, self-contained interactive web viewer using Mermaid.js CDN that displays all 6 PayLink system design models.
+### DES-P06 – Payment State Machine & Section 2.5 Lifecycle
+Act as a Senior Payment Systems Reliability Architect. Create a formal finite state machine diagram in Mermaid using `stateDiagram-v2` specifying the complete lifecycle of a PayLink bill payment.
 
-The goal is to provide a local browser interface for students and evaluators to inspect, zoom, and verify all Phase 1 diagrams without requiring external rendering tools.
+Use Section 2.5 (Payment life cycle), Section 2.6 (Business rules), and Hard Cases 1 & 2 of the student brief as the absolute source of truth.
 
-**Required application contents**
+**Required diagram contents**
 
-1. **Architecture & Dependencies**
-– Single standalone `viewer.html` file requiring 0 local build steps or npm installations.
-– Load official Mermaid.js runtime from public CDN (`mermaid@10`).
+1. **Finite States Representation**
+– Accurately model all mandatory lifecycle states:
+• `Initiated` (Payment request received and validated)
+• `FundsHeld` (Amount successfully reserved in customer wallet hold)
+• `Rejected` (Initial fraud/limit failure or insufficient balance; terminal)
+• `SentToBiller` (Payload dispatched downstream to external biller adapter)
+• `Completed` (Biller confirms success; hold converted to permanent charge; terminal)
+• `Failed` (Biller refuses transaction or timeout resolved as unpaid)
+• `Unknown` (Biller request times out after 10 seconds; funds strictly held)
+• `Refunded` (Held funds restored to available balance; terminal)
+– Explicitly mark `Rejected`, `Completed`, and `Refunded` as final states terminating at `[*]`.
 
-2. **Embedded Diagram Models**
-– Directly embed all 6 verified Mermaid specifications:
-• Tab 1: Use-Case Diagram
-• Tab 2: Domain Class Diagram & 5 Design Patterns
-• Tab 3: Sequence Diagram: Pay a Bill (Balanced Ledger)
-• Tab 4: Sequence Diagram: Refund a Failed Payment (Zero Phantom Credits)
-• Tab 5: Payment Finite State Machine
-• Tab 6: Database Relational ERD (14 Tables)
+2. **Valid Transition Invariants (Section 2.5)**
+– Enforce the strict transition matrix defined in Section 2.5 with no unauthorized transitions:
+• `Initiated` &rarr; `FundsHeld` (Fraud checks pass and wallet has enough funds)
+• `Initiated` &rarr; `Rejected` (Fraud check fails or funds are insufficient)
+• `FundsHeld` &rarr; `SentToBiller` (Request sent to biller adapter)
+• `SentToBiller` &rarr; `Completed` (Biller confirms PAID)
+• `SentToBiller` &rarr; `Failed` (Biller refuses with error code)
+• `SentToBiller` &rarr; `Unknown` (No response within 10-second timeout per Hard Case 2)
+• `Unknown` &rarr; `Completed` (Biller later confirms via callback, retry query, or settlement file)
+• `Unknown` &rarr; `Failed` (Biller later refuses or nightly reconciliation confirms no payment)
+• `Failed` &rarr; `Refunded` (Hold released back to customer wallet)
 
-3. **User Interface & Interaction**
-– Professional, responsive header and tabbed navigation bar.
-– Clean visual styling with distinct active states and modern typography.
-– Responsive container with horizontal scroll handling for complex sequence and class diagrams.
-– Standard Mermaid theme initialization with `startOnLoad: true` and `securityLevel: 'loose'`.
+3. **Strict Unknown State Handling & No Auto-Refund Rule**
+– Accurately highlight the core fintech invariant: A payment in `Unknown` is NEVER refunded automatically.
+– Funds must strictly remain in `held_balance` until conclusive confirmation is received from the biller or nightly settlement file.
+
+4. **Annotations & Notes**
+– Include descriptive notes documenting:
+• Note on `Unknown`: "A payment in UNKNOWN is NEVER refunded automatically! Money stays held until conclusive verification (FR-13)."
+• Note on `Completed`: "Hold is captured into permanent debit. Agent commission is credited if applicable (FR-17)."
 
 **Output and quality requirements**
-• Clean, standards-compliant HTML5, CSS3, and JavaScript.
-• Ensure full visual rendering of all Mermaid syntax blocks without console errors.
+• Generate valid Mermaid code using `stateDiagram-v2`.
+• Clean transition descriptions and readable layout.
+• Ensure full consistency with all other 5 Phase 1 design models.
